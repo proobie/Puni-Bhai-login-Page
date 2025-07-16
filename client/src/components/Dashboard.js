@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -168,7 +168,7 @@ const Dashboard = () => {
     return '📁';
   };
 
-  const loadUserFiles = async () => {
+  const loadUserFiles = useCallback(async () => {
     if (!currentUser) {
       console.log('No current user found');
       return;
@@ -213,7 +213,7 @@ const Dashboard = () => {
     } finally {
       setLoadingFiles(false);
     }
-  };
+  }, [currentUser, setNotification]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -236,7 +236,7 @@ const Dashboard = () => {
     if (currentUser && activeTab === 'files') {
       loadUserFiles();
     }
-  }, [currentUser, activeTab]);
+  }, [currentUser, activeTab, loadUserFiles]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
