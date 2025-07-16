@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { LogOut, User, Mail, Calendar, Settings, Home, Bell, Search, Upload, File, Download, Copy, Trash2, FolderOpen, Moon, Sun, RefreshCw } from 'lucide-react';
 import { storage } from '../firebase';
-import { ref, uploadBytes, getDownloadURL, listAll, deleteObject } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, listAll, deleteObject, getMetadata } from 'firebase/storage';
 
 const Dashboard = () => {
   const { currentUser, logout } = useAuth();
@@ -183,7 +183,7 @@ const Dashboard = () => {
       const filePromises = result.items.map(async (itemRef) => {
         try {
           const url = await getDownloadURL(itemRef);
-          const metadata = await itemRef.getMetadata();
+          const metadata = await getMetadata(itemRef);
           
           return {
             name: metadata.name.replace(/^\d+_/, ''), // Remove timestamp prefix
