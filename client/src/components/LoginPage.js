@@ -180,7 +180,7 @@ const LoginPage = () => {
           >
             {/* Removed the icon above Welcome Back */}
             <h1 className="text-4xl font-bold text-white mb-2">
-              {isLogin ? 'Puni Bhai Login Page' : 'Create Account'} {/* Fixed ESLint errors */}
+              {isLogin ? 'Login Page' : 'Create Account'} {/* Fixed ESLint errors */}
             </h1>
             <p className="text-white/80">
               {isLogin ? 'Sign in to your account' : 'Join us today'}

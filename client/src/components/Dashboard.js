@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, User, Mail, Calendar, Settings, Home, Bell, Search, Upload, File, Download, Copy, Trash2, FolderOpen } from 'lucide-react';
+import { LogOut, User, Mail, Calendar, Settings, Home, Bell, Search, Upload, File, Download, Copy, Trash2, FolderOpen, Moon, Sun, RefreshCw } from 'lucide-react';
 import { storage } from '../firebase';
 import { ref, uploadBytes, getDownloadURL, listAll, deleteObject } from 'firebase/storage';
 
@@ -16,6 +16,7 @@ const Dashboard = () => {
   const [copiedLink, setCopiedLink] = useState(null);
   const [loadingFiles, setLoadingFiles] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [darkMode, setDarkMode] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -216,10 +217,26 @@ const Dashboard = () => {
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
-    if (tab === 'files' && files.length === 0) {
+    if (tab === 'files') {
       loadUserFiles();
     }
   };
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+    if (!darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
+  // Load files when component mounts or when user changes
+  useEffect(() => {
+    if (currentUser && activeTab === 'files') {
+      loadUserFiles();
+    }
+  }, [currentUser, activeTab]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -256,54 +273,85 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className={`min-h-screen transition-colors duration-300 ${
+      darkMode 
+        ? 'bg-gradient-to-br from-gray-900 to-gray-800 text-white' 
+        : 'bg-gradient-to-br from-gray-50 to-gray-100'
+    }`}>
       {/* Header */}
-      <motion.header
-        className="bg-white shadow-sm border-b border-gray-200"
-        variants={itemVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <motion.div
-              className="flex items-center space-x-3"
-              whileHover={{ scale: 1.05 }}
-            >
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <Home className="w-6 h-6 text-white" />
-              </div>
-              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-            </motion.div>
-
-            <div className="flex items-center space-x-4">
-              <motion.button
-                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <Bell className="w-6 h-6" />
-              </motion.button>
-              <motion.button
-                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <Search className="w-6 h-6" />
-              </motion.button>
-              <motion.button
-                onClick={handleLogout}
-                className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              <motion.header
+          className={`shadow-sm border-b transition-colors duration-300 ${
+            darkMode 
+              ? 'bg-gray-800 border-gray-700' 
+              : 'bg-white border-gray-200'
+          }`}
+          variants={itemVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-4">
+              <motion.div
+                className="flex items-center space-x-3"
                 whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
-                <LogOut className="w-4 h-4" />
-                <span>Logout</span>
-              </motion.button>
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                  <Home className="w-6 h-6 text-white" />
+                </div>
+                <h1 className={`text-2xl font-bold transition-colors duration-300 ${
+                  darkMode ? 'text-white' : 'text-gray-900'
+                }`}>Dashboard</h1>
+              </motion.div>
+
+              <div className="flex items-center space-x-4">
+                <motion.button
+                  onClick={toggleDarkMode}
+                  className={`p-2 rounded-lg transition-colors ${
+                    darkMode 
+                      ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
+                      : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                  }`}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                >
+                  {darkMode ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
+                </motion.button>
+                <motion.button
+                  className={`p-2 rounded-lg transition-colors ${
+                    darkMode 
+                      ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
+                      : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                  }`}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Bell className="w-6 h-6" />
+                </motion.button>
+                <motion.button
+                  className={`p-2 rounded-lg transition-colors ${
+                    darkMode 
+                      ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
+                      : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                  }`}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Search className="w-6 h-6" />
+                </motion.button>
+                <motion.button
+                  onClick={handleLogout}
+                  className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Logout</span>
+                </motion.button>
+              </div>
             </div>
           </div>
-        </div>
-      </motion.header>
+        </motion.header>
 
       {/* Notification */}
       {notification && (
@@ -337,7 +385,9 @@ const Dashboard = () => {
             variants={itemVariants}
           >
             <motion.div
-              className="bg-white rounded-2xl shadow-lg p-6"
+              className={`rounded-2xl shadow-lg p-6 transition-colors duration-300 ${
+                darkMode ? 'bg-gray-800' : 'bg-white'
+              }`}
               variants={cardVariants}
             >
               <div className="text-center mb-6">
@@ -349,10 +399,14 @@ const Dashboard = () => {
                 >
                   <User className="w-10 h-10 text-white" />
                 </motion.div>
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className={`text-xl font-semibold transition-colors duration-300 ${
+                  darkMode ? 'text-white' : 'text-gray-900'
+                }`}>
                   {currentUser?.displayName || 'User'}
                 </h2>
-                <p className="text-gray-500 text-sm">{currentUser?.email}</p>
+                <p className={`text-sm transition-colors duration-300 ${
+                  darkMode ? 'text-gray-300' : 'text-gray-500'
+                }`}>{currentUser?.email}</p>
               </div>
 
               <div className="space-y-4">
@@ -360,8 +414,12 @@ const Dashboard = () => {
                   onClick={() => handleTabChange('overview')}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                     activeTab === 'overview'
-                      ? 'bg-blue-50 text-blue-600 border border-blue-200'
-                      : 'text-gray-600 hover:bg-gray-50'
+                      ? darkMode 
+                        ? 'bg-blue-900 text-blue-300 border border-blue-700' 
+                        : 'bg-blue-50 text-blue-600 border border-blue-200'
+                      : darkMode 
+                        ? 'text-gray-300 hover:bg-gray-700' 
+                        : 'text-gray-600 hover:bg-gray-50'
                   }`}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -374,8 +432,12 @@ const Dashboard = () => {
                   onClick={() => handleTabChange('profile')}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                     activeTab === 'profile'
-                      ? 'bg-blue-50 text-blue-600 border border-blue-200'
-                      : 'text-gray-600 hover:bg-gray-50'
+                      ? darkMode 
+                        ? 'bg-blue-900 text-blue-300 border border-blue-700' 
+                        : 'bg-blue-50 text-blue-600 border border-blue-200'
+                      : darkMode 
+                        ? 'text-gray-300 hover:bg-gray-700' 
+                        : 'text-gray-600 hover:bg-gray-50'
                   }`}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -388,8 +450,12 @@ const Dashboard = () => {
                   onClick={() => handleTabChange('files')}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                     activeTab === 'files'
-                      ? 'bg-blue-50 text-blue-600 border border-blue-200'
-                      : 'text-gray-600 hover:bg-gray-50'
+                      ? darkMode 
+                        ? 'bg-blue-900 text-blue-300 border border-blue-700' 
+                        : 'bg-blue-50 text-blue-600 border border-blue-200'
+                      : darkMode 
+                        ? 'text-gray-300 hover:bg-gray-700' 
+                        : 'text-gray-600 hover:bg-gray-50'
                   }`}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -402,8 +468,12 @@ const Dashboard = () => {
                   onClick={() => handleTabChange('settings')}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                     activeTab === 'settings'
-                      ? 'bg-blue-50 text-blue-600 border border-blue-200'
-                      : 'text-gray-600 hover:bg-gray-50'
+                      ? darkMode 
+                        ? 'bg-blue-900 text-blue-300 border border-blue-700' 
+                        : 'bg-blue-50 text-blue-600 border border-blue-200'
+                      : darkMode 
+                        ? 'text-gray-300 hover:bg-gray-700' 
+                        : 'text-gray-600 hover:bg-gray-50'
                   }`}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -421,7 +491,9 @@ const Dashboard = () => {
             variants={itemVariants}
           >
             <motion.div
-              className="bg-white rounded-2xl shadow-lg p-8"
+              className={`rounded-2xl shadow-lg p-8 transition-colors duration-300 ${
+                darkMode ? 'bg-gray-800' : 'bg-white'
+              }`}
               variants={cardVariants}
             >
               {activeTab === 'overview' && (
@@ -550,38 +622,64 @@ const Dashboard = () => {
                   transition={{ duration: 0.5 }}
                 >
                   <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900">File Manager</h2>
-                    <motion.label
-                      className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Upload className="w-5 h-5" />
-                      <span>Upload File</span>
-                      <input
-                        type="file"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                        disabled={uploading}
-                        accept="*/*"
-                      />
-                    </motion.label>
+                    <h2 className={`text-2xl font-bold transition-colors duration-300 ${
+                      darkMode ? 'text-white' : 'text-gray-900'
+                    }`}>File Manager</h2>
+                    <div className="flex items-center space-x-2">
+                      <motion.button
+                        onClick={loadUserFiles}
+                        disabled={loadingFiles}
+                        className={`p-2 rounded-lg transition-colors ${
+                          darkMode 
+                            ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
+                            : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                        } ${loadingFiles ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        whileHover={{ scale: loadingFiles ? 1 : 1.1 }}
+                        whileTap={{ scale: loadingFiles ? 1 : 0.9 }}
+                        title="Refresh files"
+                      >
+                        <RefreshCw className={`w-5 h-5 ${loadingFiles ? 'animate-spin' : ''}`} />
+                      </motion.button>
+                      <motion.label
+                        className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Upload className="w-5 h-5" />
+                        <span>Upload File</span>
+                        <input
+                          type="file"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                          disabled={uploading}
+                          accept="*/*"
+                        />
+                      </motion.label>
+                    </div>
                   </div>
 
                   {/* Drag & Drop Zone */}
                   <motion.div
-                    className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-6 hover:border-blue-400 transition-colors"
+                    className={`border-2 border-dashed rounded-lg p-8 text-center mb-6 transition-colors ${
+                      darkMode 
+                        ? 'border-gray-600 hover:border-blue-400' 
+                        : 'border-gray-300 hover:border-blue-400'
+                    }`}
                     whileHover={{ scale: 1.02 }}
                     onDragOver={(e) => {
                       e.preventDefault();
-                      e.currentTarget.classList.add('border-blue-400', 'bg-blue-50');
+                      if (darkMode) {
+                        e.currentTarget.classList.add('border-blue-400', 'bg-blue-900/20');
+                      } else {
+                        e.currentTarget.classList.add('border-blue-400', 'bg-blue-50');
+                      }
                     }}
                     onDragLeave={(e) => {
-                      e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
+                      e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50', 'bg-blue-900/20');
                     }}
                     onDrop={(e) => {
                       e.preventDefault();
-                      e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
+                      e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50', 'bg-blue-900/20');
                       const files = e.dataTransfer.files;
                       if (files.length > 0) {
                         const event = { target: { files: [files[0]] } };
@@ -589,9 +687,15 @@ const Dashboard = () => {
                       }
                     }}
                   >
-                    <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-700 mb-2">Drag & Drop Files Here</h3>
-                    <p className="text-gray-500">or click the upload button above</p>
+                    <Upload className={`w-12 h-12 mx-auto mb-4 transition-colors ${
+                      darkMode ? 'text-gray-400' : 'text-gray-400'
+                    }`} />
+                    <h3 className={`text-lg font-medium mb-2 transition-colors ${
+                      darkMode ? 'text-gray-300' : 'text-gray-700'
+                    }`}>Drag & Drop Files Here</h3>
+                    <p className={`transition-colors ${
+                      darkMode ? 'text-gray-400' : 'text-gray-500'
+                    }`}>or click the upload button above</p>
                   </motion.div>
 
                   {/* Upload Progress */}
@@ -634,46 +738,62 @@ const Dashboard = () => {
                         animate={{ opacity: 1 }}
                         className="text-center py-12"
                       >
-                        <File className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-500 mb-2">No files uploaded yet</h3>
-                        <p className="text-gray-400">Upload your first file to get started</p>
+                        <File className={`w-16 h-16 mx-auto mb-4 transition-colors ${
+                          darkMode ? 'text-gray-500' : 'text-gray-300'
+                        }`} />
+                        <h3 className={`text-lg font-medium mb-2 transition-colors ${
+                          darkMode ? 'text-gray-400' : 'text-gray-500'
+                        }`}>No files uploaded yet</h3>
+                        <p className={`transition-colors ${
+                          darkMode ? 'text-gray-500' : 'text-gray-400'
+                        }`}>Upload your first file to get started</p>
                       </motion.div>
                     ) : (
                       files.map((file, index) => (
-                                                 <motion.div
-                           key={file.url}
-                           initial={{ opacity: 0, y: 20 }}
-                           animate={{ opacity: 1, y: 0 }}
-                           transition={{ delay: index * 0.1 }}
-                           className="bg-gray-50 rounded-lg p-4 border border-gray-200"
-                         >
-                           <div className="flex items-center justify-between">
-                             <div className="flex items-center space-x-3">
-                               {file.type.startsWith('image/') ? (
-                                 <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-200">
-                                   <img 
-                                     src={file.url} 
-                                     alt={file.name}
-                                     className="w-full h-full object-cover"
-                                     onError={(e) => {
-                                       e.target.style.display = 'none';
-                                       e.target.nextSibling.style.display = 'flex';
-                                     }}
-                                   />
-                                   <div className="w-full h-full flex items-center justify-center text-2xl" style={{ display: 'none' }}>
-                                     {getFileIcon(file.type)}
-                                   </div>
-                                 </div>
-                               ) : (
-                                 <span className="text-2xl">{getFileIcon(file.type)}</span>
-                               )}
-                               <div>
-                                 <h3 className="font-medium text-gray-900">{file.name}</h3>
-                                 <p className="text-sm text-gray-500">
-                                   {formatFileSize(file.size)} • {new Date(file.uploadedAt).toLocaleDateString()}
-                                 </p>
-                               </div>
-                             </div>
+                                                                         <motion.div
+                          key={file.url}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className={`rounded-lg p-4 border transition-colors duration-300 ${
+                            darkMode 
+                              ? 'bg-gray-700 border-gray-600' 
+                              : 'bg-gray-50 border-gray-200'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              {file.type.startsWith('image/') ? (
+                                <div className={`w-12 h-12 rounded-lg overflow-hidden ${
+                                  darkMode ? 'bg-gray-600' : 'bg-gray-200'
+                                }`}>
+                                  <img 
+                                    src={file.url} 
+                                    alt={file.name}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                      e.target.nextSibling.style.display = 'flex';
+                                    }}
+                                  />
+                                  <div className="w-full h-full flex items-center justify-center text-2xl" style={{ display: 'none' }}>
+                                    {getFileIcon(file.type)}
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-2xl">{getFileIcon(file.type)}</span>
+                              )}
+                              <div>
+                                <h3 className={`font-medium transition-colors duration-300 ${
+                                  darkMode ? 'text-white' : 'text-gray-900'
+                                }`}>{file.name}</h3>
+                                <p className={`text-sm transition-colors duration-300 ${
+                                  darkMode ? 'text-gray-300' : 'text-gray-500'
+                                }`}>
+                                  {formatFileSize(file.size)} • {new Date(file.uploadedAt).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
                             <div className="flex items-center space-x-2">
                               <motion.button
                                 onClick={() => window.open(file.url, '_blank')}
